@@ -20,7 +20,7 @@ public class TaskBoard
     private static readonly int ColumnCount = Enum.GetValues(typeof(Column)).Length;
     // --- збереження у файл ---
     public string DataFile = Path.Combine(Path.GetTempPath(), "falcon_board.txt");
-    private int save_no;
+    private int _saveNo;
     // --- сповіщення ---
     public List<string> Sent = new List<string>();
     public bool Quiet;                  // вмикається на час імпорту
@@ -71,13 +71,13 @@ public class TaskBoard
             LastError = "task #" + id + " not found";
             return false;
         }
-        User u = null;
-        foreach (User x in Users)
+        User user = null;
+        foreach (User candidate in Users)
         {
-            if (x.Login == who.Trim().ToLower())
-                u = x;
+            if (candidate.Login == who.Trim().ToLower())
+                user = candidate;
         }
-        if (u == null || !u.Active)
+        if (user == null || !user.Active)
         {
             LastError = "unknown or inactive user '" + who + "'";
             return false;
@@ -106,13 +106,13 @@ public class TaskBoard
         else if (WipLimits.ContainsKey(to))
         {
             // заблоковані в ліміт не рахуються
-            int cnt = 0;
-            foreach (TaskCard x in repo.Tasks)
+            int count = 0;
+            foreach (TaskCard card in repo.Tasks)
             {
-                if (x.Column == to)
-                    cnt++;
+                if (card.Column == to)
+                    count++;
             }
-            if (cnt >= WipLimits[to])
+            if (count >= WipLimits[to])
             {
                 LastError = "WIP limit " + WipLimits[to] + " reached in " + to;
                 return false;
@@ -121,7 +121,7 @@ public class TaskBoard
         if (to == Column.InProgress)
         {
             if (t.Assignee == null)
-                t.Assignee = u.Login;       // хто взяв, той і робить
+                t.Assignee = user.Login;       // хто взяв, той і робить
         }
         if (to == Column.Done)
         {
@@ -141,13 +141,13 @@ public class TaskBoard
         }
         t.Column = to;
         MovesToday++;
-        HistoryEntry h = new HistoryEntry();
-        h.TaskId = t.Id;
-        h.From = from;
-        h.To = to;
-        h.By = u.Login;
-        h.At = DateTime.Now;
-        repo.History.Add(h);
+        HistoryEntry entry = new HistoryEntry();
+        entry.TaskId = t.Id;
+        entry.From = from;
+        entry.To = to;
+        entry.By = user.Login;
+        entry.At = DateTime.Now;
+        repo.History.Add(entry);
         Notify(t.Assignee, MoveNotice(t, from, to));
         return true;
     }
@@ -172,21 +172,21 @@ public class TaskBoard
             return false;
         if (FindUser(login) != null)
             return false;
-        User u = new User();
-        u.Login = login.Trim().ToLower();
-        u.Name = name;
+        User user = new User();
+        user.Login = login.Trim().ToLower();
+        user.Name = name;
         // старі ролі ("developer", "backend") - це dev
-        u.Role = role == "lead" || role == "qa" ? role : "dev";
-        Users.Add(u);
+        user.Role = role == "lead" || role == "qa" ? role : "dev";
+        Users.Add(user);
         return true;
     }
 
     public User FindUser(string login)
     {
-        foreach (User u in Users)
+        foreach (User user in Users)
         {
-            if (u.Login == login.Trim().ToLower())
-                return u;
+            if (user.Login == login.Trim().ToLower())
+                return user;
         }
         return null;
     }
@@ -200,24 +200,24 @@ public class TaskBoard
             LastError = "task #" + id + " not found";
             return false;
         }
-        User u = null;
-        foreach (User x in Users)
+        User user = null;
+        foreach (User candidate in Users)
         {
-            if (x.Login == who.Trim().ToLower())
-                u = x;
+            if (candidate.Login == who.Trim().ToLower())
+                user = candidate;
         }
-        if (u == null || !u.Active)
+        if (user == null || !user.Active)
         {
             LastError = "unknown or inactive user '" + who + "'";
             return false;
         }
-        if (busyCount(u.Login) >= PersonalWipLimit)
+        if (busyCount(user.Login) >= PersonalWipLimit)
         {
-            LastError = u.Name + " already has " + busyCount(u.Login) + " task(s) in work";
+            LastError = user.Name + " already has " + busyCount(user.Login) + " task(s) in work";
             return false;
         }
-        t.Assignee = u.Login;
-        Notify(u.Login, t.Key + " was assigned to you");
+        t.Assignee = user.Login;
+        Notify(user.Login, t.Key + " was assigned to you");
         return true;
     }
 
@@ -237,9 +237,9 @@ public class TaskBoard
     // ================= файл =================
     public int Save()
     {
-        save_no++;
+        _saveNo++;
         List<string> lines = new List<string>();
-        lines.Add("#falcon v" + save_no);
+        lines.Add("#falcon v" + _saveNo);
         foreach (TaskCard c in repo.Tasks)
             lines.Add(cardToLine(c));
         try
@@ -317,16 +317,16 @@ public class TaskBoard
 
     public void PrintStats()
     {
-        int[] cnt = new int[ColumnCount];
+        int[] counts = new int[ColumnCount];
         int sp = 0;
         foreach (TaskCard c in repo.Tasks)
         {
-            cnt[(int)c.Column]++;
+            counts[(int)c.Column]++;
             if (c.Column == Column.Done)
                 sp += c.Points;
         }
-        Console.WriteLine("  backlog " + cnt[0] + ", todo " + cnt[1] + ", in progress "
-            + cnt[2] + ", review " + cnt[3] + ", done " + cnt[4] + " (" + sp + " sp)");
+        Console.WriteLine("  backlog " + counts[0] + ", todo " + counts[1] + ", in progress "
+            + counts[2] + ", review " + counts[3] + ", done " + counts[4] + " (" + sp + " sp)");
         Console.WriteLine("  avg lead time: " + AvgLeadTime() + " day(s), moves: "
             + MovesToday + ", searches: " + recentQueries.Count);
     }
