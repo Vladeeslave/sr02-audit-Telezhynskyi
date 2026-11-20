@@ -297,12 +297,16 @@ public class TaskBoard
             if (WipLimits.ContainsKey(col))
                 head += " (WIP " + WipLimits[col] + ")";
             Console.WriteLine(head + ":");
-            foreach (TaskCard c in repo.Tasks)
-            {
-                if (c.Column != col)
-                    continue;
+            PrintCards(col);
+        }
+    }
+
+    private void PrintCards(Column col)
+    {
+        foreach (TaskCard c in repo.Tasks)
+        {
+            if (c.Column == col)
                 Console.WriteLine("    " + c.Describe());
-            }
         }
     }
 
