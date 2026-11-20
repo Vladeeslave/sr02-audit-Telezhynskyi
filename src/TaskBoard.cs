@@ -82,17 +82,39 @@ public class TaskBoard
         if (!TryGetActiveUser(who, out user))
             return false;
         Column from = t.Column;
+        if (!CheckMoveAllowed(t, to, who, expedite, now))
+            return false;
+        if (to == Column.InProgress && t.Assignee == null)
+            t.Assignee = user.Login;       // хто взяв, той і робить
+        if (to == Column.Done)
+            t.DoneAt = DateTime.Now;
+        t.Column = to;
+        MovesToday++;
+        RecordHistory(t, from, to, user);
+        Notify(t.Assignee, MoveNotice(t, from, to));
+        return true;
+    }
+
+    private bool CheckMoveAllowed(TaskCard t, Column to, string who, bool expedite, DateTime? now)
+    {
         if (t.Blocked)
         {
             LastError = t.Key + " is blocked: " + t.BlockReason;
             return false;
         }
         // з беклогу одразу в Done не можна
-        if (from == Column.Backlog && to == Column.Done)
+        if (t.Column == Column.Backlog && to == Column.Done)
         {
             LastError = "cannot close " + t.Key + " straight from Backlog";
             return false;
         }
+        if (!CheckLane(to, expedite, now))
+            return false;
+        return to != Column.Done || CheckDoneRules(t, who);
+    }
+
+    private bool CheckLane(Column to, bool expedite, DateTime? now)
+    {
         if (expedite)
         {
             // поки є черговий; WIP не дивимось
@@ -107,29 +129,28 @@ public class TaskBoard
             LastError = "WIP limit " + WipLimits[to] + " reached in " + to;
             return false;
         }
-        if (to == Column.InProgress)
+        return true;
+    }
+
+    private bool CheckDoneRules(TaskCard t, string who)
+    {
+        // рев'ю обов'язкове, крім дрібниць на 1 sp
+        if (IsReviewRequired(t, t.Column))
         {
-            if (t.Assignee == null)
-                t.Assignee = user.Login;       // хто взяв, той і робить
+            LastError = t.Key + " must go through Review";
+            return false;
         }
-        if (to == Column.Done)
+        // автор сам собі задачу не приймає
+        if (IsOwnTask(t, who))
         {
-            // рев'ю обов'язкове, крім дрібниць на 1 sp
-            if (IsReviewRequired(t, from))
-            {
-                LastError = t.Key + " must go through Review";
-                return false;
-            }
-            // автор сам собі задачу не приймає
-            if (IsOwnTask(t, who))
-            {
-                LastError = "author cannot accept own task " + t.Key;
-                return false;
-            }
-            t.DoneAt = DateTime.Now;
+            LastError = "author cannot accept own task " + t.Key;
+            return false;
         }
-        t.Column = to;
-        MovesToday++;
+        return true;
+    }
+
+    private void RecordHistory(TaskCard t, Column from, Column to, User user)
+    {
         HistoryEntry entry = new HistoryEntry();
         entry.TaskId = t.Id;
         entry.From = from;
@@ -137,8 +158,6 @@ public class TaskBoard
         entry.By = user.Login;
         entry.At = DateTime.Now;
         repo.History.Add(entry);
-        Notify(t.Assignee, MoveNotice(t, from, to));
-        return true;
     }
 
     // рахує всі картки колонки, і заблоковані теж (раніше коментар казав протилежне)
