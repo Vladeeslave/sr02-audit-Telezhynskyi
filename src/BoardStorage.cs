@@ -17,6 +17,7 @@ public class BoardStorage
         {
             File.WriteAllLines(DataFile, lines);
         }
+        // TODO TD-03: виняток ковтається, Save повертає кількість навіть після невдачі; строк до ЛР 7
         catch (Exception) { }
         return lines.Count - 1;
     }

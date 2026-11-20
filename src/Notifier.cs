@@ -15,6 +15,7 @@ public class Notifier
         if (Quiet)
             return;
         // TODO: пошта/Slack, коли дадуть доступ
+        // TODO TD-07: вивід прив'язано до Console, немає інтерфейсу сповіщувача (R14); строк до ЛР 8
         Console.WriteLine("  >> @" + to + ": " + text);
     }
 

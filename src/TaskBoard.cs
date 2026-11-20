@@ -35,6 +35,7 @@ public class TaskBoard
         set { _notifier.Quiet = value; }
     }
     // --- статистика і пошук ---
+    // TODO TD-04: статичний лічильник MovesToday спільний для всіх дощок; зробити полем екземпляра; строк до ЛР 8
     public static int MovesToday;
     private List<string> recentQueries = new List<string>();
 
@@ -71,6 +72,7 @@ public class TaskBoard
     }
 
     // Переносить картку (drag&drop). false - див. LastError
+    // TODO TD-05: bool + LastError замість типізованої помилки (відмова від R20); строк до КР 2
     public bool Move(int id, Column to, string who, bool expedite,
     DateTime? now = null)
     {
@@ -176,6 +178,7 @@ public class TaskBoard
 
     private static bool IsOwnTask(TaskCard t, string who)
     {
+        // TODO TD-01: порівняння враховує регістр (Taras != taras); нормалізувати разом зі зміною тесту; строк до ЛР 7
         return who == t.Assignee;
     }
 
@@ -193,6 +196,7 @@ public class TaskBoard
     }
 
     // ================= люди =================
+    // TODO TD-09: методи AddUser, FindUser, Save, cardToLine, Notify, MoveNotice лише делегують; прибрати разом зі зміною тестів; строк до КР 2
     public bool AddUser(string login, string name, string role)
     {
         return _directory.AddUser(login, name, role);
@@ -364,6 +368,7 @@ public class TaskBoard
         if (q.StartsWith("@"))
             return c.Assignee == q.Substring(1);
         if (q.StartsWith("#"))
+            // TODO TD-02: пошук за підрядком (#ui знаходить "build"); перейти на список тегів; строк до ЛР 7
             return c.Tags.Contains(q.Substring(1));
         return c.Title.ToLower().Contains(q);
     }

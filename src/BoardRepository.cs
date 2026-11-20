@@ -3,6 +3,7 @@ namespace TaskTracker;
 // Сховище в пам'яті; демо-дані - дошка команди Falcon
 public class BoardRepository
 {
+    // TODO TD-04: статичний nextId спільний для всіх сховищ; строк до ЛР 8
     public static int nextId = 111;     // 101-110 - демо-картки
     public List<TaskCard> Tasks = new List<TaskCard>();
     public List<HistoryEntry> History = new List<HistoryEntry>();
@@ -24,6 +25,7 @@ public class BoardRepository
         Add(110, "Rate limit for public API", Column.Backlog, null, 5, 2, "feature,api", 4);
     }
 
+    // TODO TD-08: 8 параметрів; замінити записом CardSpec (R11); строк до ЛР 8
     public TaskCard Add(int id, string title, Column col, string who, int sp, int prio,
         string tags, int age)
     {

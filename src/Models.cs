@@ -5,6 +5,7 @@ public enum Column { Backlog, Todo, InProgress, Review, Done }
 // Картка на дошці; поля публічні - так простіше з UI
 public class TaskCard
 {
+    // TODO TD-06: публічні поля й відкрита колекція Tasks у репозиторії (R13 не виконано); строк до ЛР 8
     public int Id;
     public string Key;              // "TT-101"
     public string Title;
