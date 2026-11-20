@@ -18,6 +18,19 @@ public class TaskCard
     public string Reporter;
     public DateTime CreatedAt;
     public DateTime DoneAt;         // MinValue - ще не закрита
+
+    // Короткий опис картки для списків: ключ, назва, виконавець, розмір, блок
+    public string Describe()
+    {
+        string line = Key + " " + Title;
+        if (Assignee != null)
+            line += " @" + Assignee;
+        if (Points > 0)
+            line += " (" + Points + " sp)";
+        if (Blocked)
+            line += " [blocked]";
+        return line;
+    }
 }
 
 public class User
