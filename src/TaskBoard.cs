@@ -20,8 +20,12 @@ public class TaskBoard
     private const int ReviewWipLimit = 2;
     private static readonly int ColumnCount = Enum.GetValues(typeof(Column)).Length;
     // --- збереження у файл ---
-    public string DataFile = Path.Combine(Path.GetTempPath(), "falcon_board.txt");
-    private int _saveNo;
+    private BoardStorage _storage = new BoardStorage();
+    public string DataFile
+    {
+        get { return _storage.DataFile; }
+        set { _storage.DataFile = value; }
+    }
     // --- сповіщення ---
     private Notifier _notifier = new Notifier();
     public List<string> Sent => _notifier.Sent;
@@ -246,25 +250,12 @@ public class TaskBoard
     // ================= файл =================
     public int Save()
     {
-        _saveNo++;
-        List<string> lines = new List<string>();
-        lines.Add("#falcon v" + _saveNo);
-        foreach (TaskCard c in repo.Tasks)
-            lines.Add(cardToLine(c));
-        try
-        {
-            File.WriteAllLines(DataFile, lines);
-        }
-        catch (Exception) { }
-        return lines.Count - 1;
+        return _storage.Save(repo.Tasks);
     }
 
     public string cardToLine(TaskCard c)
     {
-        string s = c.Id + ";" + c.Key + ";" + c.Title.Replace(";", ",") + ";" + c.Column;
-        s += ";" + (c.Assignee == null ? "" : c.Assignee) + ";" + c.Points + ";" + c.Priority;
-        return s + ";" + c.Tags + ";" + (c.Blocked ? "1" : "0") + ";"
-            + c.CreatedAt.ToString("yyyy-MM-dd");
+        return _storage.cardToLine(c);
     }
 
     // ================= сповіщення =================
