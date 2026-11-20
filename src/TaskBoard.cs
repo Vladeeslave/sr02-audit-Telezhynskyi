@@ -23,8 +23,13 @@ public class TaskBoard
     public string DataFile = Path.Combine(Path.GetTempPath(), "falcon_board.txt");
     private int _saveNo;
     // --- сповіщення ---
-    public List<string> Sent = new List<string>();
-    public bool Quiet;                  // вмикається на час імпорту
+    private Notifier _notifier = new Notifier();
+    public List<string> Sent => _notifier.Sent;
+    public bool Quiet
+    {
+        get { return _notifier.Quiet; }
+        set { _notifier.Quiet = value; }
+    }
     // --- статистика і пошук ---
     public static int MovesToday;
     private List<string> recentQueries = new List<string>();
@@ -265,33 +270,12 @@ public class TaskBoard
     // ================= сповіщення =================
     public void Notify(string login, string text)
     {
-        if (text == null)
-            return;
-        string to = login ?? "team";
-        Sent.Add(to + ": " + text);
-        if (Quiet)
-            return;
-        // TODO: пошта/Slack, коли дадуть доступ
-        Console.WriteLine("  >> @" + to + ": " + text);
+        _notifier.Notify(login, text);
     }
 
     public string MoveNotice(TaskCard t, Column from, Column to)
     {
-        switch (to)
-        {
-            case Column.Todo:
-                return from == Column.Backlog ? t.Key + " is planned: " + t.Title : null;
-            case Column.InProgress:
-                return from == Column.Review ? t.Key + " needs rework" : null;
-            case Column.Review:
-                return t.Key + " is in the review queue (" + t.Points + " sp)";
-            case Column.Done:
-                string s = t.Key + " is accepted, thanks!";
-                if (t.Priority == 1)
-                    s += " Critical - keep an eye on prod.";
-                return s;
-        }
-        return null;
+        return _notifier.MoveNotice(t, from, to);
     }
 
     // ================= звіти і пошук =================
