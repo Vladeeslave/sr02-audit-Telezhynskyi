@@ -71,10 +71,11 @@ public class TaskBoard
             LastError = "task #" + id + " not found";
             return false;
         }
+        string login = who.Trim().ToLower();
         User user = null;
         foreach (User candidate in Users)
         {
-            if (candidate.Login == who.Trim().ToLower())
+            if (candidate.Login == login)
                 user = candidate;
         }
         if (user == null || !user.Active)
@@ -200,10 +201,11 @@ public class TaskBoard
             LastError = "task #" + id + " not found";
             return false;
         }
+        string login = who.Trim().ToLower();
         User user = null;
         foreach (User candidate in Users)
         {
-            if (candidate.Login == who.Trim().ToLower())
+            if (candidate.Login == login)
                 user = candidate;
         }
         if (user == null || !user.Active)
