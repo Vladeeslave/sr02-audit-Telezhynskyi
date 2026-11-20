@@ -17,7 +17,6 @@ public class TaskCard
     public string BlockReason;
     public string Reporter;
     public DateTime CreatedAt;
-    public DateTime StartedAt;
     public DateTime DoneAt;         // MinValue - ще не закрита
 }
 

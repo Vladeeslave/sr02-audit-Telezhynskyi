@@ -35,7 +35,6 @@ public class SprintReport
             s += BlockedBonus;            // blockers first
         if (c.Column == Column.Review)
             s += ReviewBonus;
-        //if (c.Points == 0) s += 10;
         int age = (DateTime.Today - c.CreatedAt.Date).Days;
         if (age > StaleAgeDays)
             s += age;           // давні задачі піднімаємо

@@ -122,7 +122,6 @@ public class TaskBoard
         {
             if (t.Assignee == null)
                 t.Assignee = u.Login;       // хто взяв, той і робить
-            t.StartedAt = DateTime.Now;
         }
         if (to == Column.Done)
         {
@@ -140,8 +139,6 @@ public class TaskBoard
             }
             t.DoneAt = DateTime.Now;
         }
-        //if (from == Column.Done)
-        //    t.DoneAt = DateTime.MinValue;   // reopen - спитати Олену
         t.Column = to;
         MovesToday++;
         HistoryEntry h = new HistoryEntry();
@@ -372,10 +369,5 @@ public class TaskBoard
                 res.Add(c);
         }
         return res;
-    }
-
-    public string LastQuery()
-    {
-        return recentQueries.Count == 0 ? null : recentQueries[recentQueries.Count - 1];
     }
 }
