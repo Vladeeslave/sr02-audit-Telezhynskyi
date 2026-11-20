@@ -52,7 +52,8 @@ public class TaskBoard
     }
 
     // Переносить картку (drag&drop). false - див. LastError
-    public bool Move(int id, Column to, string who, bool expedite)
+    public bool Move(int id, Column to, string who, bool expedite,
+    DateTime? now = null)
     {
         LastError = null;
         TaskCard t = repo.FindTask(id);
@@ -87,7 +88,7 @@ public class TaskBoard
         if (expedite)
         {
             // поки є черговий; WIP не дивимось
-            if (DateTime.Now.Hour >= 19)
+            if ((now ?? DateTime.Now).Hour >= 19)
             {
                 LastError = "expedite lane is closed after 19:00";
                 return false;
