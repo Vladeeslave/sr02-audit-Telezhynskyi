@@ -326,8 +326,9 @@ public class TaskBoard
         int[] counts = new int[ColumnCount];
         int sp = 0;
         foreach (TaskCard c in repo.Tasks)
-        {
             counts[(int)c.Column]++;
+        foreach (TaskCard c in repo.Tasks)
+        {
             if (c.Column == Column.Done)
                 sp += c.Points;
         }
