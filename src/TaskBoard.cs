@@ -74,12 +74,9 @@ public class TaskBoard
     public bool Move(int id, Column to, string who, bool expedite,
     DateTime? now = null)
     {
-        LastError = null;
         TaskCard t;
-        if (!TryGetTask(id, out t))
-            return false;
         User user;
-        if (!TryGetActiveUser(who, out user))
+        if (!TryGetTaskAndUser(id, who, out t, out user))
             return false;
         Column from = t.Column;
         if (!CheckMoveAllowed(t, to, who, expedite, now))
@@ -206,6 +203,14 @@ public class TaskBoard
         return _directory.FindUser(login);
     }
 
+    // скидає LastError і знаходить картку та активну людину; false - причина в LastError
+    private bool TryGetTaskAndUser(int id, string who, out TaskCard task, out User user)
+    {
+        LastError = null;
+        user = null;
+        return TryGetTask(id, out task) && TryGetActiveUser(who, out user);
+    }
+
     private bool TryGetTask(int id, out TaskCard task)
     {
         task = repo.FindTask(id);
@@ -236,12 +241,9 @@ public class TaskBoard
 
     public bool Assign(int id, string who)
     {
-        LastError = null;
         TaskCard t;
-        if (!TryGetTask(id, out t))
-            return false;
         User user;
-        if (!TryGetActiveUser(who, out user))
+        if (!TryGetTaskAndUser(id, who, out t, out user))
             return false;
         if (busyCount(user.Login) >= PersonalWipLimit)
         {
