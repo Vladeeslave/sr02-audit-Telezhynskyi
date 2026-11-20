@@ -92,20 +92,10 @@ public class TaskBoard
                 return false;
             }
         }
-        else if (WipLimits.ContainsKey(to))
+        else if (WipLimits.ContainsKey(to) && CountInColumn(to) >= WipLimits[to])
         {
-            // заблоковані в ліміт не рахуються
-            int count = 0;
-            foreach (TaskCard card in repo.Tasks)
-            {
-                if (card.Column == to)
-                    count++;
-            }
-            if (count >= WipLimits[to])
-            {
-                LastError = "WIP limit " + WipLimits[to] + " reached in " + to;
-                return false;
-            }
+            LastError = "WIP limit " + WipLimits[to] + " reached in " + to;
+            return false;
         }
         if (to == Column.InProgress)
         {
@@ -139,6 +129,18 @@ public class TaskBoard
         repo.History.Add(entry);
         Notify(t.Assignee, MoveNotice(t, from, to));
         return true;
+    }
+
+    // рахує всі картки колонки, і заблоковані теж (раніше коментар казав протилежне)
+    private int CountInColumn(Column column)
+    {
+        int count = 0;
+        foreach (TaskCard card in repo.Tasks)
+        {
+            if (card.Column == column)
+                count++;
+        }
+        return count;
     }
 
     private static bool IsReviewRequired(TaskCard t, Column from)
@@ -365,19 +367,18 @@ public class TaskBoard
         recentQueries.Add(q);
         foreach (TaskCard c in repo.Tasks)
         {
-            if (q.StartsWith("@"))
-            {
-                if (c.Assignee == q.Substring(1))
-                    res.Add(c);
-            }
-            else if (q.StartsWith("#"))
-            {
-                if (c.Tags.Contains(q.Substring(1)))
-                    res.Add(c);
-            }
-            else if (c.Title.ToLower().Contains(q))
+            if (Matches(c, q))
                 res.Add(c);
         }
         return res;
+    }
+
+    private static bool Matches(TaskCard c, string q)
+    {
+        if (q.StartsWith("@"))
+            return c.Assignee == q.Substring(1);
+        if (q.StartsWith("#"))
+            return c.Tags.Contains(q.Substring(1));
+        return c.Title.ToLower().Contains(q);
     }
 }
