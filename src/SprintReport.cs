@@ -35,10 +35,14 @@ public class SprintReport
             s += BlockedBonus;            // blockers first
         if (c.Column == Column.Review)
             s += ReviewBonus;
-        int age = (DateTime.Today - c.CreatedAt.Date).Days;
-        if (age > StaleAgeDays)
-            s += age;           // давні задачі піднімаємо
+        if (AgeInDays(c) > StaleAgeDays)
+            s += AgeInDays(c);           // давні задачі піднімаємо
         return s;
+    }
+
+    private static int AgeInDays(TaskCard c)
+    {
+        return (DateTime.Today - c.CreatedAt.Date).Days;
     }
 
     // hot cards for the standup: everything on the board with 50+
