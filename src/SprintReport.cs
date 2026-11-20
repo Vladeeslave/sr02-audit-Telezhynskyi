@@ -13,6 +13,12 @@ public class SprintReport
     private const int ReviewBonus = 15;
     private const int StaleAgeDays = 14;
     private const int HotScore = 50;            // з цього балу картка йде на стендап
+    private static readonly Dictionary<int, int> PriorityScore = new Dictionary<int, int>
+    {
+        { 1, CriticalScore },
+        { 2, HighScore },
+        { 3, NormalScore }
+    };
 
     public SprintReport(BoardRepository repo)
     {
@@ -22,13 +28,9 @@ public class SprintReport
     // "температура" картки: що обговорюємо першим
     public int Score(TaskCard c)
     {
-        int s = BaseScore;
-        if (c.Priority == 1)
-            s = CriticalScore;
-        else if (c.Priority == 2)
-            s = HighScore;
-        else if (c.Priority == 3)
-            s = NormalScore;
+        int s;
+        if (!PriorityScore.TryGetValue(c.Priority, out s))
+            s = BaseScore;
         if (c.Tags.Contains("bug"))
             s += BugBonus;
         if (c.Blocked)
