@@ -115,13 +115,13 @@ public class TaskBoard
         if (to == Column.Done)
         {
             // рев'ю обов'язкове, крім дрібниць на 1 sp
-            if (from != Column.Review && t.Points > SmallTaskPoints)
+            if (IsReviewRequired(t, from))
             {
                 LastError = t.Key + " must go through Review";
                 return false;
             }
             // автор сам собі задачу не приймає
-            if (who == t.Assignee)
+            if (IsOwnTask(t, who))
             {
                 LastError = "author cannot accept own task " + t.Key;
                 return false;
@@ -139,6 +139,16 @@ public class TaskBoard
         repo.History.Add(entry);
         Notify(t.Assignee, MoveNotice(t, from, to));
         return true;
+    }
+
+    private static bool IsReviewRequired(TaskCard t, Column from)
+    {
+        return from != Column.Review && t.Points > SmallTaskPoints;
+    }
+
+    private static bool IsOwnTask(TaskCard t, string who)
+    {
+        return who == t.Assignee;
     }
 
     // порожня причина = зняти блок
