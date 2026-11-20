@@ -4,6 +4,15 @@ namespace TaskTracker;
 public class SprintReport
 {
     private BoardRepository repo;
+    private const int BaseScore = 5;
+    private const int CriticalScore = 100;
+    private const int HighScore = 50;
+    private const int NormalScore = 20;
+    private const int BugBonus = 30;
+    private const int BlockedBonus = 40;
+    private const int ReviewBonus = 15;
+    private const int StaleAgeDays = 14;
+    private const int HotScore = 50;            // з цього балу картка йде на стендап
 
     public SprintReport(BoardRepository repo)
     {
@@ -13,22 +22,22 @@ public class SprintReport
     // "температура" картки: що обговорюємо першим
     public int Score(TaskCard c)
     {
-        int s = 5;
+        int s = BaseScore;
         if (c.Priority == 1)
-            s = 100;
+            s = CriticalScore;
         else if (c.Priority == 2)
-            s = 50;
+            s = HighScore;
         else if (c.Priority == 3)
-            s = 20;
+            s = NormalScore;
         if (c.Tags.Contains("bug"))
-            s += 30;
+            s += BugBonus;
         if (c.Blocked)
-            s += 40;            // blockers first
+            s += BlockedBonus;            // blockers first
         if (c.Column == Column.Review)
-            s += 15;
+            s += ReviewBonus;
         //if (c.Points == 0) s += 10;
         int age = (DateTime.Today - c.CreatedAt.Date).Days;
-        if (age > 14)
+        if (age > StaleAgeDays)
             s += age;           // давні задачі піднімаємо
         return s;
     }
@@ -38,7 +47,7 @@ public class SprintReport
     {
         foreach (TaskCard c in repo.Tasks)
         {
-            if (c.Column == Column.Done || c.Column == Column.Backlog || Score(c) < 50)
+            if (c.Column == Column.Done || c.Column == Column.Backlog || Score(c) < HotScore)
                 continue;
             Console.Write("  [" + Score(c) + "]");
             string line = " " + c.Key + " " + c.Title;

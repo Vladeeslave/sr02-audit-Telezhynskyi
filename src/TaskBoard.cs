@@ -8,7 +8,16 @@ public class TaskBoard
     public string LastError;            // причина останньої відмови
     // --- люди ---
     public List<User> Users = new List<User>();
-    private int personalLimit = 2;      // max 3 задачі на людину
+    private const int PersonalWipLimit = 2;     // скільки задач у роботі може мати людина
+    private const int ExpediteCutoffHour = 19;  // після цієї години експрес-лінія закрита
+    private const int DefaultPriority = 3;
+    private const int MinPriority = 1;
+    private const int MaxPriority = 4;
+    private const int SmallTaskPoints = 1;      // дрібниці до цього розміру можна без рев'ю
+    private const int TodoWipLimit = 6;
+    private const int InProgressWipLimit = 3;
+    private const int ReviewWipLimit = 2;
+    private static readonly int ColumnCount = Enum.GetValues(typeof(Column)).Length;
     // --- збереження у файл ---
     public string DataFile = Path.Combine(Path.GetTempPath(), "falcon_board.txt");
     private int save_no;
@@ -22,9 +31,9 @@ public class TaskBoard
     public TaskBoard(BoardRepository repo)
     {
         this.repo = repo;
-        WipLimits.Add(Column.Todo, 6);
-        WipLimits.Add(Column.InProgress, 3);
-        WipLimits.Add(Column.Review, 2);
+        WipLimits.Add(Column.Todo, TodoWipLimit);
+        WipLimits.Add(Column.InProgress, InProgressWipLimit);
+        WipLimits.Add(Column.Review, ReviewWipLimit);
         // TODO: load the team from HR system
         AddUser("olena", "Olena Kravets", "lead");
         AddUser("ivan", "Ivan Moroz", "dev");
@@ -43,7 +52,7 @@ public class TaskBoard
         t.Key = "TT-" + t.Id;
         t.Title = title.Trim();
         t.Points = points;
-        t.Priority = prio < 1 || prio > 4 ? 3 : prio;
+        t.Priority = prio < MinPriority || prio > MaxPriority ? DefaultPriority : prio;
         t.Tags = tags == null ? "" : tags.ToLower();
         t.Reporter = by;
         t.CreatedAt = DateTime.Now;
@@ -88,9 +97,9 @@ public class TaskBoard
         if (expedite)
         {
             // поки є черговий; WIP не дивимось
-            if ((now ?? DateTime.Now).Hour >= 19)
+            if ((now ?? DateTime.Now).Hour >= ExpediteCutoffHour)
             {
-                LastError = "expedite lane is closed after 19:00";
+                LastError = "expedite lane is closed after " + ExpediteCutoffHour + ":00";
                 return false;
             }
         }
@@ -118,7 +127,7 @@ public class TaskBoard
         if (to == Column.Done)
         {
             // рев'ю обов'язкове, крім дрібниць на 1 sp
-            if (from != Column.Review && t.Points > 1)
+            if (from != Column.Review && t.Points > SmallTaskPoints)
             {
                 LastError = t.Key + " must go through Review";
                 return false;
@@ -205,7 +214,7 @@ public class TaskBoard
             LastError = "unknown or inactive user '" + who + "'";
             return false;
         }
-        if (busyCount(u.Login) >= personalLimit)
+        if (busyCount(u.Login) >= PersonalWipLimit)
         {
             LastError = u.Name + " already has " + busyCount(u.Login) + " task(s) in work";
             return false;
@@ -311,7 +320,7 @@ public class TaskBoard
 
     public void PrintStats()
     {
-        int[] cnt = new int[5];
+        int[] cnt = new int[ColumnCount];
         int sp = 0;
         foreach (TaskCard c in repo.Tasks)
         {
