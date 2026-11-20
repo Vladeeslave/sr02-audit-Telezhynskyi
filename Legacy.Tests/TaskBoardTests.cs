@@ -122,4 +122,22 @@ public class TaskBoardTests
         Assert.Throws<NullReferenceException>(
             () => Move(110, Column.Todo, null!));
     }
+
+    [Fact]
+    public void Move_Expedite_IgnoresWipBeforeSeven()
+    {
+        var evening = new DateTime(2026, 1, 5, 18, 59, 0);
+        Assert.True(_board.Move(
+            102, Column.InProgress, "sofia", true, evening));
+    }
+
+    [Fact]
+    public void Move_Expedite_ClosedFromSeven()
+    {
+        var late = new DateTime(2026, 1, 5, 19, 0, 0);
+        Assert.False(_board.Move(
+            102, Column.InProgress, "sofia", true, late));
+        Assert.Equal("expedite lane is closed after 19:00",
+            _board.LastError);
+    }
 }
