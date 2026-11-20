@@ -7,7 +7,8 @@ public class TaskBoard
     public Dictionary<Column, int> WipLimits = new Dictionary<Column, int>();
     public string LastError;            // причина останньої відмови
     // --- люди ---
-    public List<User> Users = new List<User>();
+    private UserDirectory _directory = new UserDirectory();
+    public List<User> Users => _directory.Users;
     private const int PersonalWipLimit = 2;     // скільки задач у роботі може мати людина
     private const int ExpediteCutoffHour = 19;  // після цієї години експрес-лінія закрита
     private const int DefaultPriority = 3;
@@ -169,27 +170,12 @@ public class TaskBoard
     // ================= люди =================
     public bool AddUser(string login, string name, string role)
     {
-        if (login == null || login.Trim() == "")
-            return false;
-        if (FindUser(login) != null)
-            return false;
-        User user = new User();
-        user.Login = login.Trim().ToLower();
-        user.Name = name;
-        // старі ролі ("developer", "backend") - це dev
-        user.Role = role == "lead" || role == "qa" ? role : "dev";
-        Users.Add(user);
-        return true;
+        return _directory.AddUser(login, name, role);
     }
 
     public User FindUser(string login)
     {
-        foreach (User user in Users)
-        {
-            if (user.Login == login.Trim().ToLower())
-                return user;
-        }
-        return null;
+        return _directory.FindUser(login);
     }
 
     private bool TryGetTask(int id, out TaskCard task)
