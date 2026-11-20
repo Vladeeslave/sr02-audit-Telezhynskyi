@@ -65,24 +65,12 @@ public class TaskBoard
     DateTime? now = null)
     {
         LastError = null;
-        TaskCard t = repo.FindTask(id);
-        if (t == null)
-        {
-            LastError = "task #" + id + " not found";
+        TaskCard t;
+        if (!TryGetTask(id, out t))
             return false;
-        }
-        string login = who.Trim().ToLower();
-        User user = null;
-        foreach (User candidate in Users)
-        {
-            if (candidate.Login == login)
-                user = candidate;
-        }
-        if (user == null || !user.Active)
-        {
-            LastError = "unknown or inactive user '" + who + "'";
+        User user;
+        if (!TryGetActiveUser(who, out user))
             return false;
-        }
         Column from = t.Column;
         if (t.Blocked)
         {
@@ -192,17 +180,21 @@ public class TaskBoard
         return null;
     }
 
-    public bool Assign(int id, string who)
+    private bool TryGetTask(int id, out TaskCard task)
     {
-        LastError = null;
-        TaskCard t = repo.FindTask(id);
-        if (t == null)
+        task = repo.FindTask(id);
+        if (task == null)
         {
             LastError = "task #" + id + " not found";
             return false;
         }
+        return true;
+    }
+
+    private bool TryGetActiveUser(string who, out User user)
+    {
         string login = who.Trim().ToLower();
-        User user = null;
+        user = null;
         foreach (User candidate in Users)
         {
             if (candidate.Login == login)
@@ -213,6 +205,18 @@ public class TaskBoard
             LastError = "unknown or inactive user '" + who + "'";
             return false;
         }
+        return true;
+    }
+
+    public bool Assign(int id, string who)
+    {
+        LastError = null;
+        TaskCard t;
+        if (!TryGetTask(id, out t))
+            return false;
+        User user;
+        if (!TryGetActiveUser(who, out user))
+            return false;
         if (busyCount(user.Login) >= PersonalWipLimit)
         {
             LastError = user.Name + " already has " + busyCount(user.Login) + " task(s) in work";
